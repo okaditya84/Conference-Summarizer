@@ -14,7 +14,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import speech_recognition as sr
-
+import base64
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -28,6 +28,38 @@ def get_pdf_text(pdf_docs):
         for page in pdf_reader.pages:
             text += page.extract_text()
     return text
+
+# Add a function to generate and download the summary
+def generate_summary(docs):
+    raw_text = ""
+    for doc in docs:
+        extracted_text = extract_text_from_bytes(doc.getvalue(), get_file_extension(doc))
+        if extracted_text is not None and extracted_text.strip() != "":
+            raw_text += extracted_text
+
+    if raw_text is None or raw_text.strip() == "":
+        return None
+
+    text_chunks = get_text_chunks(raw_text)
+    get_vector_store(text_chunks)
+
+    summary_prompt = "Summarize the document."
+    summary_response = user_input(summary_prompt)
+
+    if summary_response is not None:
+        full_summary = ""
+        for item in summary_response['output_text']:
+            full_summary += item
+        return full_summary
+
+    return None
+
+
+def create_download_link(content, filename, link_text):
+    encoded_content = content.encode("utf-8")
+    b64_content = base64.b64encode(encoded_content).decode("utf-8")
+    href = f'<a href="data:file/txt;base64,{b64_content}" download="{filename}">{link_text}</a>'
+    return href
 
 
 # read any files with textract
@@ -200,8 +232,6 @@ def main():
         
         if st.button("Submit & Process"):
             with st.spinner("Processing..."):
-                # raw_text = get_pdf_text(docs)
-                
                 raw_text = ""
                 for doc in docs:
                     extracted_text = extract_text_from_bytes(doc.getvalue(), get_file_extension(doc))
@@ -271,6 +301,15 @@ def main():
         if response is not None:
             message = {"role": "assistant", "content": full_response}
             st.session_state.messages.append(message)
+    if st.button("Generate Summary and Download"):
+        with st.spinner("Generating Summary..."):
+            summary = generate_summary(docs)
+            if summary:
+                download_link = create_download_link(summary, "summary.txt", "Download Summary")
+                st.markdown(download_link, unsafe_allow_html=True)
+            else:
+                st.error("Summary generation failed. Please try again.")
+        
 
 
 if __name__ == "__main__":
