@@ -221,7 +221,7 @@ def main():
                     st.success("Done")
 
     # Main content area for displaying chat messages
-    st.title("Beyond Words: Chat with Your Files using Gemini 🪄")
+    st.title("Conference Summarizer: Extract Insights from Your Sessions 📚")
     st.write("""
         | Category                | File Types                                           |
         |-------------------------|------------------------------------------------------|
@@ -236,7 +236,7 @@ def main():
 
     if "messages" not in st.session_state.keys():
         st.session_state.messages = [
-            {"role": "assistant", "content": "Forget searching through endless folders! Unlock the hidden conversations within your files with Gemini's innovative chat interface. Ask questions, explore insights, and discover connections – all directly through natural language. Upload your files and interact with your data."}]
+            {"role": "assistant", "content": "Chat with AI to know the summary about the sessions!"}]
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
