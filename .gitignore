@@ -1,0 +1,4 @@
+.env
+env/
+faiss_index/
+.devcontainer/

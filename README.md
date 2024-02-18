@@ -1,2 +1,5 @@
-# Conference Summarizer
- This is a prototype implementation of a summarizer AI system to chat with the knowledge in a conversational manner and ask follow up questions. 
+# Gemini Chat File
+
+https://geminichatfile.streamlit.app/
+
+Chat with Your Data, Powered by Gemini, Google's LLM: Transforms your data into interactive conversations, unlocking insights from documents and files. Explore, analyze, and understand your data.
