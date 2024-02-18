@@ -8,4 +8,4 @@ faiss-cpu
 langchain_google_genai
 textract
 PyAudio
-portaudio
+portaudio==19.6.0
