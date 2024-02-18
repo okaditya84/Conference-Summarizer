@@ -13,6 +13,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
+import speech_recognition as sr
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
@@ -30,6 +31,24 @@ def get_pdf_text(pdf_docs):
 
 
 # read any files with textract
+def speech_to_text():
+    recognizer = sr.Recognizer()
+    microphone = sr.Microphone()
+
+    with microphone as source:
+        st.info("Speak now...")
+        audio_data = recognizer.listen(source, timeout=10)
+
+    try:
+        text = recognizer.recognize_google(audio_data)
+        st.success("Speech-to-text conversion successful.")
+        return text
+    except sr.UnknownValueError:
+        st.warning("Sorry, I couldn't understand the audio.")
+        return None
+    except sr.RequestError as e:
+        st.error(f"Error during speech-to-text conversion: {e}")
+        return None
 
 def extract_text_from_bytes(data_bytes, file_extension):
     with tempfile.NamedTemporaryFile(suffix=f".{file_extension}", delete=False) as temp_file:
@@ -223,11 +242,21 @@ def main():
         with st.chat_message(message["role"]):
             st.write(message["content"])
 
-    if prompt := st.chat_input():
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    if prompt := st.text_input("Ask a question or provide input:", key="user_input"):
+        voice_input = st.checkbox("Voice Input", key="voice_input")
+        if voice_input:
+            st.warning("Ensure your microphone is working and speak clearly.")
+            if st.button("Submit Voice Input"):
+                with st.spinner("Processing..."):
+                    voice_text = speech_to_text()
+                    if voice_text:
+                        st.session_state.messages.append(
+                            {"role": "user", "content": voice_text})
+                    else:
+                        st.error("Voice input failed. Please try again.")
+
         with st.chat_message("user"):
             st.write(prompt)
-
     # Display chat messages and bot response
     if st.session_state.messages[-1]["role"] != "assistant":
         with st.chat_message("assistant"):
