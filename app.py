@@ -82,6 +82,9 @@ def speech_to_text():
         st.error(f"Error during speech-to-text conversion: {e}")
         return None
 
+
+
+
 def extract_text_from_bytes(data_bytes, file_extension):
     with tempfile.NamedTemporaryFile(suffix=f".{file_extension}", delete=False) as temp_file:
         temp_filename = temp_file.name
@@ -140,8 +143,7 @@ def get_conversational_chain():
     # If the user's question is not relevant to the "context" document
     If the user's question is not relevant to the "context" document, you must inform the user by saying "context not found" and then proceed to generate an answer to the user's question. This ensures that the user receives a response even if it is not directly related to the context.
     To further improve your responses, you will adopt one or more EXPERT roles when answering user questions. By doing so, you can provide authoritative and nuanced answers by leveraging your knowledge as an EXPERT. Your goal is to provide depth and detail in your answers while thinking step by step to generate the best responses.
-
-    # Additional Tasks
+ddional Tasks
     Here are some additional tasks you must perform as an LLM AI:
     - Support the user in accomplishing their goals by aligning with them and calling upon an expert agent perfectly suited to the task at hand.
     - Adopt the role of one or more subject matter EXPERTs who are most qualified to provide authoritative and nuanced answers. Proceed step by step to respond effectively.
@@ -223,13 +225,14 @@ def main():
         page_icon="🤖"
     )
 
-    # Sidebar for uploading files
+    # Sidebar for uploading files and voice input checkbox
     with st.sidebar:
         st.title("Menu:")
         st.write()
         docs = st.file_uploader(
             "Upload your Files and Click on the Submit & Process Button", accept_multiple_files=True)
-        
+        enable_voice_input = st.checkbox("Enable Voice Input")
+
         if st.button("Submit & Process"):
             with st.spinner("Processing..."):
                 raw_text = ""
@@ -239,10 +242,10 @@ def main():
                         file_name = ""
                         if hasattr(doc, 'name'):
                             file_name = Path(doc.name).name
-                        st.warning("Unable to extract text from the uploaded file " + file_name)   
+                        st.warning("Unable to extract text from the uploaded file " + file_name)
                     else:
-                        raw_text += extracted_text 
-                
+                        raw_text += extracted_text
+
                 if raw_text is None or raw_text.strip() == "":
                     st.error("Text extraction failed for all uploaded files")
                 else:
@@ -273,8 +276,7 @@ def main():
             st.write(message["content"])
 
     if prompt := st.text_input("Ask a question or provide input:", key="user_input"):
-        voice_input = st.checkbox("Voice Input", key="voice_input")
-        if voice_input:
+        if enable_voice_input:
             st.warning("Ensure your microphone is working and speak clearly.")
             if st.button("Submit Voice Input"):
                 with st.spinner("Processing..."):
@@ -284,9 +286,12 @@ def main():
                             {"role": "user", "content": voice_text})
                     else:
                         st.error("Voice input failed. Please try again.")
-
+        else:
+            st.session_state.messages.append(
+                {"role": "user", "content": prompt})                                                        
         with st.chat_message("user"):
             st.write(prompt)
+
     # Display chat messages and bot response
     if st.session_state.messages[-1]["role"] != "assistant":
         with st.chat_message("assistant"):
@@ -301,6 +306,7 @@ def main():
         if response is not None:
             message = {"role": "assistant", "content": full_response}
             st.session_state.messages.append(message)
+
     if st.button("Generate Summary and Download"):
         with st.spinner("Generating Summary..."):
             summary = generate_summary(docs)
