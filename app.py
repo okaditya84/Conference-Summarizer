@@ -212,13 +212,13 @@ def user_input(user_question):
 
     response = chain(
         {"input_documents": docs, "question": user_question}, return_only_outputs=True)
-        
+
     return response
 
 #driver code
 def main():
     st.set_page_config(
-        page_title="Gemini File Chatbot",
+        page_title="Meeting Companion",
         page_icon="🤖"
     )
 
@@ -251,7 +251,7 @@ def main():
                     st.success("Done")
 
     # Main content area for displaying chat messages
-    st.title("Conference Summarizer: Extract Insights from Your Sessions 📚")
+    st.title("Meeting Companion: Extract Insights from Your Sessions 📚")
     st.write("""
         | Category                | File Types                                           |
         |-------------------------|------------------------------------------------------|
