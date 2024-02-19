@@ -312,8 +312,6 @@ def main():
                 st.markdown(download_link, unsafe_allow_html=True)
             else:
                 st.error("Summary generation failed. Please try again.")
-        
-
 
 if __name__ == "__main__":
     main()
