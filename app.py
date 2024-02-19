@@ -15,12 +15,13 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import speech_recognition as sr
 import base64
+
+
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # read all pdf files and return text
-
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -28,6 +29,31 @@ def get_pdf_text(pdf_docs):
         for page in pdf_reader.pages:
             text += page.extract_text()
     return text
+
+# split text into chunks
+def get_text_chunks(text):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=10000, chunk_overlap=1000)
+    chunks = splitter.split_text(text)
+    return chunks 
+
+# read any files with textract
+def extract_text_from_bytes(data_bytes, file_extension):
+    with tempfile.NamedTemporaryFile(suffix=f".{file_extension}", delete=False) as temp_file:
+        temp_filename = temp_file.name
+        temp_file.write(data_bytes)
+
+    try:
+        text = textract.process(temp_filename)
+        return text.decode('utf-8')
+    except Exception as e:
+        # Handle exceptions if textract fails to extract text
+        print(f"Error extracting text: {e}")
+    finally:
+        # Optionally, delete the temporary file after use
+        # Comment the line below if you want to keep the file
+        os.remove(temp_filename)
+
 
 # Add a function to generate and download the summary
 def generate_summary(docs):
@@ -54,7 +80,7 @@ def generate_summary(docs):
 
     return None
 
-
+# create download link
 def create_download_link(content, filename, link_text):
     encoded_content = content.encode("utf-8")
     b64_content = base64.b64encode(encoded_content).decode("utf-8")
@@ -62,7 +88,7 @@ def create_download_link(content, filename, link_text):
     return href
 
 
-# read any files with textract
+# operate speech to text
 def speech_to_text():
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
@@ -83,27 +109,7 @@ def speech_to_text():
         return None
 
 
-
-
-def extract_text_from_bytes(data_bytes, file_extension):
-    with tempfile.NamedTemporaryFile(suffix=f".{file_extension}", delete=False) as temp_file:
-        temp_filename = temp_file.name
-        temp_file.write(data_bytes)
-
-    try:
-        text = textract.process(temp_filename)
-        return text.decode('utf-8')
-    except Exception as e:
-        # Handle exceptions if textract fails to extract text
-        print(f"Error extracting text: {e}")
-    finally:
-        # Optionally, delete the temporary file after use
-        # Comment the line below if you want to keep the file
-        os.remove(temp_filename)
-
-
 # get file extension
-
 def get_file_extension(file_like_object):
     # Using mimetypes.guess_extension to determine file extension
     mime, encoding = mimetypes.guess_type(file_like_object.name)
@@ -113,25 +119,15 @@ def get_file_extension(file_like_object):
         # If mime type is not recognized, you may need to handle this case based on your requirements
         return None
 
-# split text into chunks
-
-
-def get_text_chunks(text):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=10000, chunk_overlap=1000)
-    chunks = splitter.split_text(text)
-    return chunks  # list of strings
 
 # get embeddings for each chunk
-
-
 def get_vector_store(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001")  # type: ignore
     vector_store = FAISS.from_texts(chunks, embedding=embeddings)
     vector_store.save_local("faiss_index")
 
-
+#creating a conversational chain
 def get_conversational_chain():
     prompt_template = """
     # LLM AI, Trained by Google
@@ -198,11 +194,13 @@ ddional Tasks
     chain = load_qa_chain(llm=model, chain_type="stuff", prompt=prompt)
     return chain
 
-
+# clear chat history
 def clear_chat_history():
     st.session_state.messages = [
         {"role": "assistant", "content": "Forget searching through endless folders! Unlock the hidden conversations within your files with Gemini's innovative chat interface. Ask questions, explore insights, and discover connections – all directly through natural language. Upload your files and interact with your data."}]
 
+
+#process user input
 def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001")  # type: ignore
@@ -218,7 +216,7 @@ def user_input(user_question):
     print(response)
     return response
 
-
+#driver code
 def main():
     st.set_page_config(
         page_title="Gemini File Chatbot",
