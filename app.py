@@ -124,9 +124,9 @@ from gensim.models import LdaModel
 from gensim.parsing.preprocessing import STOPWORDS
 import matplotlib.pyplot as plt
 from googletrans import Translator
-import sounddevice as sd
+import soundcard as sc
 import numpy as np
-from scipy.io import wavfile
+import wave
 import vosk
 import json
 import pyttsx3
@@ -209,12 +209,15 @@ def translate_text(text, target_language='en'):
 def speech_to_text():
     st.write("Recording... Speak now!")
     duration = 5  # seconds
-    recording = sd.rec(int(samplerate * duration), samplerate=samplerate, channels=1)
-    sd.wait()
+    
+    # Record audio
+    with sc.get_microphone(id=sc.default_speaker().name).recorder(samplerate=samplerate) as mic:
+        data = mic.record(numframes=samplerate*duration)
+    
     st.write("Recording finished!")
 
     # Convert the NumPy array to raw bytes
-    audio_data = (recording * 32767).astype(np.int16).tobytes()
+    audio_data = (data * 32767).astype(np.int16).tobytes()
 
     # Create a Vosk recognizer
     rec = vosk.KaldiRecognizer(model, samplerate)
@@ -227,6 +230,7 @@ def speech_to_text():
     text = result['text']
 
     return text if text else "Sorry, I couldn't understand that. Please try again."
+
 
 def text_to_speech(text):
     engine = pyttsx3.init()
