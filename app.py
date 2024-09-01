@@ -124,9 +124,16 @@ from gensim.models import LdaModel
 from gensim.parsing.preprocessing import STOPWORDS
 import matplotlib.pyplot as plt
 from googletrans import Translator
-import speech_recognition as sr
+import sounddevice as sd
+import numpy as np
+from scipy.io import wavfile
+import vosk
+import json
 import pyttsx3
 from fpdf import FPDF
+
+model = vosk.Model("vosk-model-small-en-us-0.15")
+samplerate = 16000
 
 # Download necessary NLTK data
 nltk.download('vader_lexicon')
@@ -200,17 +207,26 @@ def translate_text(text, target_language='en'):
     return translated.text
 
 def speech_to_text():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.write("Speak now...")
-        audio = recognizer.listen(source)
-    try:
-        text = recognizer.recognize_google(audio)
-        return text
-    except sr.UnknownValueError:
-        st.write("Could not understand audio")
-    except sr.RequestError:
-        st.write("Could not request results; check your network connection")
+    st.write("Recording... Speak now!")
+    duration = 5  # seconds
+    recording = sd.rec(int(samplerate * duration), samplerate=samplerate, channels=1)
+    sd.wait()
+    st.write("Recording finished!")
+
+    # Convert the NumPy array to raw bytes
+    audio_data = (recording * 32767).astype(np.int16).tobytes()
+
+    # Create a Vosk recognizer
+    rec = vosk.KaldiRecognizer(model, samplerate)
+    
+    # Feed the audio data to the recognizer
+    rec.AcceptWaveform(audio_data)
+    result = json.loads(rec.FinalResult())
+
+    # Extract the recognized text
+    text = result['text']
+
+    return text if text else "Sorry, I couldn't understand that. Please try again."
 
 def text_to_speech(text):
     engine = pyttsx3.init()
