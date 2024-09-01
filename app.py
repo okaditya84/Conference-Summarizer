@@ -228,6 +228,9 @@ def main():
     st.set_page_config("Enhanced Conference Summarizer")
     st.header("Chat with your personal assistant 💁")
 
+    # Initialize raw_text as an empty string
+    raw_text = ""
+
     user_question = st.text_input("Ask a Question based on your office meetings, conferences and much more.")
 
     if user_question:
@@ -245,33 +248,51 @@ def main():
 
         st.subheader("Additional Features")
         if st.button("Analyze Sentiment"):
-            sentiment = sentiment_analysis(raw_text)
-            st.write(f"Sentiment: {sentiment}")
+            if raw_text:
+                sentiment = sentiment_analysis(raw_text)
+                st.write(f"Sentiment: {sentiment}")
+            else:
+                st.write("Please process documents first.")
 
         if st.button("Extract Action Items"):
-            action_items = extract_action_items(raw_text)
-            st.write("Action Items:", action_items)
+            if raw_text:
+                action_items = extract_action_items(raw_text)
+                st.write("Action Items:", action_items)
+            else:
+                st.write("Please process documents first.")
 
         if st.button("Generate Topic Model"):
-            topics = topic_modeling(raw_text)
-            st.write("Topics:", topics)
+            if raw_text:
+                topics = topic_modeling(raw_text)
+                st.write("Topics:", topics)
+            else:
+                st.write("Please process documents first.")
 
         target_lang = st.selectbox("Select language for translation", ['en', 'es', 'fr', 'de', 'it'])
         if st.button("Translate"):
-            translated_text = translate_text(raw_text, target_lang)
-            st.write("Translated Text:", translated_text)
+            if raw_text:
+                translated_text = translate_text(raw_text, target_lang)
+                st.write("Translated Text:", translated_text)
+            else:
+                st.write("Please process documents first.")
 
         if st.button("Voice Input"):
             spoken_text = speech_to_text()
             st.write("You said:", spoken_text)
 
         if st.button("Text-to-Speech"):
-            text_to_speech(raw_text)
-            st.write("Audio played")
+            if raw_text:
+                text_to_speech(raw_text)
+                st.write("Audio played")
+            else:
+                st.write("Please process documents first.")
 
         if st.button("Generate Meeting Minutes"):
-            generate_meeting_minutes(raw_text)
-            st.write("Meeting minutes generated and saved as 'meeting_minutes.pdf'")
+            if raw_text:
+                generate_meeting_minutes(raw_text)
+                st.write("Meeting minutes generated and saved as 'meeting_minutes.pdf'")
+            else:
+                st.write("Please process documents first.")
 
 if __name__ == "__main__":
     main()
