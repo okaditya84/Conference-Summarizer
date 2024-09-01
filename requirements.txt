@@ -14,7 +14,7 @@ googletrans==3.1.0a0
 SpeechRecognition 
 pyttsx3 
 fpdf
+vosk 
 sounddevice 
 numpy 
-scipy 
-requests
+scipy
