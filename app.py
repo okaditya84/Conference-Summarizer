@@ -228,8 +228,9 @@ def main():
     st.set_page_config("Enhanced Conference Summarizer")
     st.header("Chat with your personal assistant 💁")
 
-    # Initialize raw_text as an empty string
-    raw_text = ""
+    # Initialize session state
+    if 'raw_text' not in st.session_state:
+        st.session_state.raw_text = ""
 
     user_question = st.text_input("Ask a Question based on your office meetings, conferences and much more.")
 
@@ -241,37 +242,37 @@ def main():
         pdf_docs = st.file_uploader("Upload your meeting documents and resources and Click on the Submit & Process Button", accept_multiple_files=True)
         if st.button("Submit & Process"):
             with st.spinner("Processing..."):
-                raw_text = get_pdf_text(pdf_docs)
-                text_chunks = get_text_chunks(raw_text)
+                st.session_state.raw_text = get_pdf_text(pdf_docs)
+                text_chunks = get_text_chunks(st.session_state.raw_text)
                 get_vector_store(text_chunks)
                 st.success("Done")
 
         st.subheader("Additional Features")
         if st.button("Analyze Sentiment"):
-            if raw_text:
-                sentiment = sentiment_analysis(raw_text)
+            if st.session_state.raw_text:
+                sentiment = sentiment_analysis(st.session_state.raw_text)
                 st.write(f"Sentiment: {sentiment}")
             else:
                 st.write("Please process documents first.")
 
         if st.button("Extract Action Items"):
-            if raw_text:
-                action_items = extract_action_items(raw_text)
+            if st.session_state.raw_text:
+                action_items = extract_action_items(st.session_state.raw_text)
                 st.write("Action Items:", action_items)
             else:
                 st.write("Please process documents first.")
 
         if st.button("Generate Topic Model"):
-            if raw_text:
-                topics = topic_modeling(raw_text)
+            if st.session_state.raw_text:
+                topics = topic_modeling(st.session_state.raw_text)
                 st.write("Topics:", topics)
             else:
                 st.write("Please process documents first.")
 
         target_lang = st.selectbox("Select language for translation", ['en', 'es', 'fr', 'de', 'it'])
         if st.button("Translate"):
-            if raw_text:
-                translated_text = translate_text(raw_text, target_lang)
+            if st.session_state.raw_text:
+                translated_text = translate_text(st.session_state.raw_text, target_lang)
                 st.write("Translated Text:", translated_text)
             else:
                 st.write("Please process documents first.")
@@ -281,15 +282,15 @@ def main():
             st.write("You said:", spoken_text)
 
         if st.button("Text-to-Speech"):
-            if raw_text:
-                text_to_speech(raw_text)
+            if st.session_state.raw_text:
+                text_to_speech(st.session_state.raw_text)
                 st.write("Audio played")
             else:
                 st.write("Please process documents first.")
 
         if st.button("Generate Meeting Minutes"):
-            if raw_text:
-                generate_meeting_minutes(raw_text)
+            if st.session_state.raw_text:
+                generate_meeting_minutes(st.session_state.raw_text)
                 st.write("Meeting minutes generated and saved as 'meeting_minutes.pdf'")
             else:
                 st.write("Please process documents first.")
