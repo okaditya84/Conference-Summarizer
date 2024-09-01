@@ -15,6 +15,6 @@ SpeechRecognition
 pyttsx3 
 fpdf
 vosk 
-soundcard
+sounddevice 
 numpy 
 scipy

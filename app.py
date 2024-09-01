@@ -124,13 +124,13 @@ from gensim.models import LdaModel
 from gensim.parsing.preprocessing import STOPWORDS
 import matplotlib.pyplot as plt
 from googletrans import Translator
-import soundcard as sc
+import sounddevice as sd
 import numpy as np
-import wave
 import vosk
 import json
 import pyttsx3
 from fpdf import FPDF
+import wave
 
 model = vosk.Model("vosk-model-small-en-us-0.15")
 samplerate = 16000
@@ -210,27 +210,33 @@ def speech_to_text():
     st.write("Recording... Speak now!")
     duration = 5  # seconds
     
-    # Record audio
-    with sc.get_microphone(id=sc.default_speaker().name).recorder(samplerate=samplerate) as mic:
-        data = mic.record(numframes=samplerate*duration)
-    
+    # Record audio using sounddevice
+    recording = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype='int16')
+    sd.wait()  # Wait until the recording is finished
     st.write("Recording finished!")
 
-    # Convert the NumPy array to raw bytes
-    audio_data = (data * 32767).astype(np.int16).tobytes()
+    # Save the recorded audio to a .wav file
+    wav_file = "output.wav"
+    with wave.open(wav_file, 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)  # 16-bit audio
+        wf.setframerate(samplerate)
+        wf.writeframes(recording.tobytes())
 
-    # Create a Vosk recognizer
-    rec = vosk.KaldiRecognizer(model, samplerate)
-    
-    # Feed the audio data to the recognizer
-    rec.AcceptWaveform(audio_data)
-    result = json.loads(rec.FinalResult())
+    # Load and process the .wav file with Vosk
+    with wave.open(wav_file, 'rb') as wf:
+        rec = vosk.KaldiRecognizer(model, wf.getframerate())
+        while True:
+            data = wf.readframes(4000)
+            if len(data) == 0:
+                break
+            if rec.AcceptWaveform(data):
+                break
+        result = json.loads(rec.FinalResult())
 
     # Extract the recognized text
-    text = result['text']
-
+    text = result.get('text', "")
     return text if text else "Sorry, I couldn't understand that. Please try again."
-
 
 def text_to_speech(text):
     engine = pyttsx3.init()
@@ -248,7 +254,6 @@ def main():
     st.set_page_config("Enhanced Conference Summarizer")
     st.header("Chat with your personal assistant 💁")
 
-    # Initialize session state
     if 'raw_text' not in st.session_state:
         st.session_state.raw_text = ""
 
