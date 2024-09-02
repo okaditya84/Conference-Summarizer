@@ -124,6 +124,7 @@ from gensim.summarization import summarize
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from transformers import pipeline
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
@@ -174,8 +175,12 @@ def user_input(user_question):
     response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
     st.write("Reply:", response["output_text"])
 
+
+
 def summarize_text(text):
-    return summarize(text, ratio=0.2)
+    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+    summary = summarizer(text, max_length=150, min_length=30, do_sample=False)
+    return summary[0]['summary_text']
 
 def generate_word_cloud(text):
     wordcloud = WordCloud(background_color='white', max_words=100).generate(text)

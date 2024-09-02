@@ -20,3 +20,5 @@ numpy
 scipy
 wordcloud
 huggingface-hub
+transformers
+torch
