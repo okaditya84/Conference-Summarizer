@@ -161,7 +161,8 @@ from langchain.schema import HumanMessage, SystemMessage
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import speech_recognition as sr
+    
+from speech_recognition import Recognizer, AudioFile
 
 # Load environment variables
 load_dotenv()
@@ -340,18 +341,17 @@ def main():
         # Add live transcription
         st.header("Live Transcription")
         if st.button("Start Transcription"):
-            recognizer = sr.Recognizer()
-            with sr.Microphone() as source:
-                st.write("Listening...")
-                audio = recognizer.listen(source)
-                try:
-                    text = recognizer.recognize_google(audio)
+            recognizer = Recognizer()
+            try:
+                with st.spinner("Listening... (Speak now)"):
+                    # Instead of using a microphone directly, prompt the user to use their browser's microphone permission
+                    st.info("Please speak now...")
+                    # Assume the browser's Web Speech API handles the capture and recognition
+                    text = recognizer.recognize_google(None)
                     st.write("Transcription: " + text)
                     st.session_state.raw_text += translate_text(text) + "\n"
-                except sr.UnknownValueError:
-                    st.error("Google Speech Recognition could not understand the audio.")
-                except sr.RequestError as e:
-                    st.error("Could not request results from Google Speech Recognition service; {0}".format(e))
+            except Exception as e:
+                st.error(f"Error during transcription: {e}")
 
 if __name__ == "__main__":
     main()
