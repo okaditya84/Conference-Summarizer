@@ -120,7 +120,7 @@ from langchain.prompts import PromptTemplate
 from langchain.llms import HuggingFaceHub
 from langchain.chains import LLMChain
 from googletrans import Translator
-from gensim.summarization import summarize
+
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
