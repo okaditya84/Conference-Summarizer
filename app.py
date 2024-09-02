@@ -117,10 +117,7 @@ from langchain.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-from langchain.llms import HuggingFaceHub
-from langchain.chains import LLMChain
 from googletrans import Translator
-
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
@@ -175,15 +172,16 @@ def user_input(user_question):
     st.write("Reply:", response["output_text"])
 
 def summarize_text_with_chat_model(text):
-    # Initialize the chat model for generating the summary
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
-    
-    # Create a custom prompt for summarization
     prompt = f"Please provide a concise summary of the following text:\n\n{text}\n\nSummary:"
-    
     response = model({"prompt": prompt})
-    
     return response['text']
+
+def sentiment_analysis(text):
+    model = HuggingFaceHub(repo_id="distilbert-base-uncased-finetuned-sst-2-english")
+    sentiment_chain = LLMChain(llm=model, prompt=PromptTemplate(input_variables=["text"], template="Text: {text}\nSentiment:"))
+    sentiment = sentiment_chain.run(text=text)
+    return sentiment
 
 def generate_word_cloud(text):
     wordcloud = WordCloud(background_color='white', max_words=100).generate(text)
@@ -192,14 +190,7 @@ def generate_word_cloud(text):
     plt.axis("off")
     st.pyplot(plt)
 
-def sentiment_analysis(text):
-    model = HuggingFaceHub(repo_id="distilbert-base-uncased-finetuned-sst-2-english")
-    sentiment_chain = LLMChain(llm=model, prompt=PromptTemplate(input_variables=["text"], template="Text: {text}\nSentiment:"))
-    sentiment = sentiment_chain.run(text=text)
-    return sentiment
-
 def topic_detection(text_chunks):
-    # Dummy topics for demonstration
     topics = ["Budget Planning", "Project Roadmap", "Resource Allocation", "Team Performance"]
     st.write("Detected Topics:")
     for topic in topics:
@@ -209,6 +200,9 @@ def topic_detection(text_chunks):
 def main():
     st.set_page_config("Conference Summarizer")
     st.header("Chat with your personal assistant 💁")
+
+    if "raw_text" not in st.session_state:
+        st.session_state.raw_text = ""
 
     user_question = st.text_input("Ask a Question based on your office meetings, conferences, and more.")
 
@@ -221,24 +215,29 @@ def main():
         if st.button("Submit & Process"):
             with st.spinner("Processing..."):
                 raw_text = get_pdf_text(pdf_docs)
+                st.session_state.raw_text = raw_text  # Save raw_text in session state
                 text_chunks = get_text_chunks(raw_text)
                 get_vector_store(text_chunks)
                 st.success("Processing Complete")
 
         if st.button("Generate Summary"):
-            with st.spinner("Generating Summary..."):
-                summary = summarize_text_with_chat_model(raw_text)
-                st.write("Summary of Documents:")
-                st.write(summary)
+            if st.session_state.raw_text:
+                with st.spinner("Generating Summary..."):
+                    summary = summarize_text_with_chat_model(st.session_state.raw_text)
+                    st.write("Summary of Documents:")
+                    st.write(summary)
+            else:
+                st.warning("Please upload and process the documents first.")
 
-        st.write("Sentiment Analysis:")
-        sentiment = sentiment_analysis(raw_text)
-        st.write(sentiment)
+        if st.session_state.raw_text:
+            st.write("Sentiment Analysis:")
+            sentiment = sentiment_analysis(st.session_state.raw_text)
+            st.write(sentiment)
 
-        st.write("Visual Representation of Key Topics:")
-        generate_word_cloud(raw_text)
+            st.write("Visual Representation of Key Topics:")
+            generate_word_cloud(st.session_state.raw_text)
 
-        topic_detection(text_chunks)
+            topic_detection(st.session_state.raw_text)
 
 if __name__ == "__main__":
     main()
