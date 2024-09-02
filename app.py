@@ -124,7 +124,6 @@ from googletrans import Translator
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
-from transformers import pipeline
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
@@ -175,12 +174,16 @@ def user_input(user_question):
     response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
     st.write("Reply:", response["output_text"])
 
-
-
-def summarize_text(text):
-    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-    summary = summarizer(text, max_length=150, min_length=30, do_sample=False)
-    return summary[0]['summary_text']
+def summarize_text_with_chat_model(text):
+    # Initialize the chat model for generating the summary
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+    
+    # Create a custom prompt for summarization
+    prompt = f"Please provide a concise summary of the following text:\n\n{text}\n\nSummary:"
+    
+    response = model({"prompt": prompt})
+    
+    return response['text']
 
 def generate_word_cloud(text):
     wordcloud = WordCloud(background_color='white', max_words=100).generate(text)
@@ -222,18 +225,20 @@ def main():
                 get_vector_store(text_chunks)
                 st.success("Processing Complete")
 
-                summary = summarize_text(raw_text)
+        if st.button("Generate Summary"):
+            with st.spinner("Generating Summary..."):
+                summary = summarize_text_with_chat_model(raw_text)
                 st.write("Summary of Documents:")
                 st.write(summary)
 
-                st.write("Sentiment Analysis:")
-                sentiment = sentiment_analysis(raw_text)
-                st.write(sentiment)
+        st.write("Sentiment Analysis:")
+        sentiment = sentiment_analysis(raw_text)
+        st.write(sentiment)
 
-                st.write("Visual Representation of Key Topics:")
-                generate_word_cloud(raw_text)
+        st.write("Visual Representation of Key Topics:")
+        generate_word_cloud(raw_text)
 
-                topic_detection(text_chunks)
+        topic_detection(text_chunks)
 
 if __name__ == "__main__":
     main()

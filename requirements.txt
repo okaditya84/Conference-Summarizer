@@ -7,8 +7,7 @@ chromadb
 faiss-cpu
 langchain_google_genai
 langchain-community
-nltk 
-
+nltk
 matplotlib 
 googletrans==3.1.0a0 
 SpeechRecognition 
@@ -20,5 +19,3 @@ numpy
 scipy
 wordcloud
 huggingface-hub
-transformers
-torch
