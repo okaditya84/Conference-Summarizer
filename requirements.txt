@@ -18,4 +18,3 @@ vosk
 sounddevice 
 numpy 
 scipy
-PortAudio
