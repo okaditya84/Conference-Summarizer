@@ -113,7 +113,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import google.generativeai as genai
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
@@ -121,6 +121,7 @@ from googletrans import Translator
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from langchain.schema import HumanMessage, SystemMessage
 
 # Load environment variables
 load_dotenv()
@@ -175,14 +176,14 @@ def user_input(user_question):
 
 def summarize_text_with_chat_model(text):
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
-    prompt = f"Please provide a concise summary of the following text:\n\n{text}\n\nSummary:"
-    response = model({"prompt": prompt})
+    messages = [HumanMessage(content=f"Please provide a concise summary of the following text:\n\n{text}")]
+    response = model(messages)
     return response['text']
 
 def sentiment_analysis_with_chat_model(text):
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
-    prompt = f"Analyze the sentiment of the following text:\n\n{text}\n\nSentiment:"
-    response = model({"prompt": prompt})
+    messages = [HumanMessage(content=f"Analyze the sentiment of the following text:\n\n{text}")]
+    response = model(messages)
     return response['text']
 
 def generate_word_cloud(text):
