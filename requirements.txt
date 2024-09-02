@@ -23,4 +23,3 @@ python-pptx
 python-docx
 SpeechRecognition
 pydub
-PyAudio
