@@ -19,3 +19,7 @@ numpy
 scipy
 wordcloud
 huggingface-hub
+python-pptx
+python-docx
+SpeechRecognition
+pydub
