@@ -177,14 +177,14 @@ def user_input(user_question):
 def summarize_text_with_chat_model(text):
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
     messages = [HumanMessage(content=f"Please provide a concise summary of the following text:\n\n{text}")]
-    response = model(messages)
-    return response['text']
+    response = model.invoke(messages)
+    return response.content  # Access the content directly
 
 def sentiment_analysis_with_chat_model(text):
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
     messages = [HumanMessage(content=f"Analyze the sentiment of the following text:\n\n{text}")]
-    response = model(messages)
-    return response['text']
+    response = model.invoke(messages)
+    return response.content  # Access the content directly
 
 def generate_word_cloud(text):
     wordcloud = WordCloud(background_color='white', max_words=100).generate(text)
