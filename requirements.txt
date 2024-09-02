@@ -20,4 +20,3 @@ numpy
 scipy
 wordcloud
 huggingface-hub
-dotenv
