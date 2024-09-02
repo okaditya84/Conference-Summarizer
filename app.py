@@ -122,10 +122,12 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
+# Initialize translator
 translator = Translator()
 
 def translate_text(text, target_language="en"):
@@ -177,11 +179,11 @@ def summarize_text_with_chat_model(text):
     response = model({"prompt": prompt})
     return response['text']
 
-def sentiment_analysis(text):
-    model = HuggingFaceHub(repo_id="distilbert-base-uncased-finetuned-sst-2-english")
-    sentiment_chain = LLMChain(llm=model, prompt=PromptTemplate(input_variables=["text"], template="Text: {text}\nSentiment:"))
-    sentiment = sentiment_chain.run(text=text)
-    return sentiment
+def sentiment_analysis_with_chat_model(text):
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+    prompt = f"Analyze the sentiment of the following text:\n\n{text}\n\nSentiment:"
+    response = model({"prompt": prompt})
+    return response['text']
 
 def generate_word_cloud(text):
     wordcloud = WordCloud(background_color='white', max_words=100).generate(text)
@@ -198,27 +200,30 @@ def topic_detection(text_chunks):
     st.write("You might want to ask about these topics!")
 
 def main():
-    st.set_page_config("Conference Summarizer")
+    st.set_page_config(page_title="Conference Summarizer")
     st.header("Chat with your personal assistant 💁")
 
     if "raw_text" not in st.session_state:
         st.session_state.raw_text = ""
 
-    user_question = st.text_input("Ask a Question based on your office meetings, conferences, and more.")
+    user_question = st.text_input("Ask a question based on your office meetings, conferences, and more.")
 
     if user_question:
         user_input(user_question)
 
     with st.sidebar:
         st.title("Menu:")
-        pdf_docs = st.file_uploader("Upload your meeting documents and resources and click on Submit & Process", accept_multiple_files=True)
+        pdf_docs = st.file_uploader("Upload your meeting documents and resources, then click 'Submit & Process'", accept_multiple_files=True)
         if st.button("Submit & Process"):
-            with st.spinner("Processing..."):
-                raw_text = get_pdf_text(pdf_docs)
-                st.session_state.raw_text = raw_text  # Save raw_text in session state
-                text_chunks = get_text_chunks(raw_text)
-                get_vector_store(text_chunks)
-                st.success("Processing Complete")
+            if pdf_docs:
+                with st.spinner("Processing..."):
+                    raw_text = get_pdf_text(pdf_docs)
+                    st.session_state.raw_text = raw_text  # Save raw_text in session state
+                    text_chunks = get_text_chunks(raw_text)
+                    get_vector_store(text_chunks)
+                    st.success("Processing Complete")
+            else:
+                st.warning("Please upload at least one document.")
 
         if st.button("Generate Summary"):
             if st.session_state.raw_text:
@@ -231,7 +236,7 @@ def main():
 
         if st.session_state.raw_text:
             st.write("Sentiment Analysis:")
-            sentiment = sentiment_analysis(st.session_state.raw_text)
+            sentiment = sentiment_analysis_with_chat_model(st.session_state.raw_text)
             st.write(sentiment)
 
             st.write("Visual Representation of Key Topics:")
@@ -241,3 +246,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
